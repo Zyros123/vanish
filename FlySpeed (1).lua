@@ -1,5 +1,6 @@
--- Universal Fly + Speed + Fling + Vanish
+-- Universal Fly + Speed + Fling + Vanish + Noclip
 -- RightShift para minimizar
+-- Noclip = atravesar paredes / zonas bloqueadas
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -15,6 +16,7 @@ local Flying = false
 local SpeedOn = false
 local FlingOn = false
 local VanishOn = false
+local NoclipOn = false
 local BV, BG
 local lastFling = 0
 local SavedTransparency = {}
@@ -95,6 +97,17 @@ local function setVanish(on)
     end
 end
 
+local function setNoclip(on)
+    NoclipOn = on
+    local char = LocalPlayer.Character
+    if not char then return end
+    for _, part in pairs(char:GetDescendants()) do
+        if part:IsA("BasePart") then
+            part.CanCollide = not on
+        end
+    end
+end
+
 local function flingTarget(targetChar)
     if not targetChar or tick() - lastFling < 2 then return end
     local thrp = targetChar:FindFirstChild("HumanoidRootPart")
@@ -131,6 +144,20 @@ Mouse.Button1Down:Connect(function()
     end
 end)
 
+-- Noclip loop (mantener CanCollide off)
+RunService.Stepped:Connect(function()
+    if NoclipOn then
+        local char = LocalPlayer.Character
+        if char then
+            for _, part in pairs(char:GetDescendants()) do
+                if part:IsA("BasePart") then
+                    part.CanCollide = false
+                end
+            end
+        end
+    end
+end)
+
 RunService.RenderStepped:Connect(function()
     if Flying and BV and BG then
         local cam = Camera.CFrame
@@ -155,6 +182,7 @@ LocalPlayer.CharacterAdded:Connect(function()
     if SpeedOn then setSpeed(true) end
     if Flying then stopFly() task.wait(0.3) startFly() end
     if VanishOn then task.wait(0.2) setVanish(true) end
+    if NoclipOn then task.wait(0.2) setNoclip(true) end
 end)
 
 local sg = Instance.new("ScreenGui")
@@ -176,8 +204,8 @@ Mini.Parent = sg
 Instance.new("UICorner", Mini).CornerRadius = UDim.new(0, 8)
 
 local Main = Instance.new("Frame")
-Main.Size = UDim2.new(0, 220, 0, 290)
-Main.Position = UDim2.new(0.5, -110, 0.5, -145)
+Main.Size = UDim2.new(0, 220, 0, 330)
+Main.Position = UDim2.new(0.5, -110, 0.5, -165)
 Main.BackgroundColor3 = Color3.fromRGB(20, 20, 26)
 Main.Active = true
 Main.Draggable = true
@@ -262,11 +290,23 @@ local vanishBtn = makeBtn("Vanish: OFF", 218, function()
     end
 end)
 
+local noclipBtn = makeBtn("Noclip: OFF", 254, function()
+    if NoclipOn then
+        setNoclip(false)
+        noclipBtn.Text = "Noclip: OFF"
+        noclipBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+    else
+        setNoclip(true)
+        noclipBtn.Text = "Noclip: ON"
+        noclipBtn.BackgroundColor3 = Color3.fromRGB(180, 120, 40)
+    end
+end)
+
 local info = Instance.new("TextLabel")
 info.Size = UDim2.new(1, -20, 0, 20)
-info.Position = UDim2.new(0, 10, 0, 254)
+info.Position = UDim2.new(0, 10, 0, 292)
 info.BackgroundTransparency = 1
-info.Text = "Vanish = invisible"
+info.Text = "Noclip = atravesar paredes"
 info.TextColor3 = Color3.fromRGB(140, 140, 160)
 info.Font = Enum.Font.Gotham
 info.TextSize = 11
@@ -299,4 +339,4 @@ UserInputService.InputBegan:Connect(function(inp, gpe)
     end
 end)
 
-print("Loaded! | Fly + Speed + Fling + Vanish")
+print("Loaded! | Fly + Speed + Fling + Vanish + Noclip")
